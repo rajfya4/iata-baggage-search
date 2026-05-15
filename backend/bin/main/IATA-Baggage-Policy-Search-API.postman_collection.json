@@ -1,0 +1,169 @@
+{
+  "info": {
+    "name": "IATA Baggage Policy Search API",
+    "description": "API collection for testing the IATA Baggage Policy Search backend.\n\nBase URL: {{base_url}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "audit_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Query",
+      "description": "Baggage policy query endpoints",
+      "item": [
+        {
+          "name": "Submit Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"agent123\",\n  \"query\": \"What is the checked bag fee for international flights?\"\n}"
+            },
+            "url": "{{base_url}}/api/query"
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"answer\": \"The checked bag fee for international flights is $30 for the first bag and $40 for the second bag.\",\n  \"citations\": [\n    {\n      \"section\": \"Section 3.2\",\n      \"text\": \"For international flights, the first checked bag is $30 and the second is $40.\",\n      \"relevanceScore\": 0.92\n    }\n  ],\n  \"timestamp\": \"2026-05-15T12:00:00Z\"\n}"
+            },
+            {
+              "name": "Validation Error (400)",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                }
+              ],
+              "body": "{\n  \"type\": \"urn:problem-type:validation\",\n  \"title\": \"Validation Error\",\n  \"status\": 400,\n  \"detail\": \"userId: must not be blank, query: must not be blank\"\n}"
+            },
+            {
+              "name": "Rate Limited (429)",
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                },
+                {
+                  "key": "Retry-After",
+                  "value": "60"
+                }
+              ],
+              "body": "{\n  \"type\": \"urn:problem-type:rate-limit\",\n  \"title\": \"Too Many Requests\",\n  \"status\": 429,\n  \"detail\": \"Rate limit exceeded. Try again in 60 seconds.\",\n  \"retryAfter\": 60\n}"
+            }
+          ]
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/query"
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "Query endpoint is active"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "description": "Audit log retrieval endpoints",
+      "item": [
+        {
+          "name": "Get All Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/audit"
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "[\n  {\n    \"id\": 1,\n    \"userId\": \"agent123\",\n    \"queryText\": \"What is the checked bag fee for international flights?\",\n    \"response\": \"The checked bag fee for international flights is $30 for the first bag.\",\n    \"citations\": \"Section 3.2\",\n    \"createdAt\": \"2026-05-15T12:00:00\"\n  },\n  {\n    \"id\": 2,\n    \"userId\": \"agent456\",\n    \"queryText\": \"What is the carry-on size limit?\",\n    \"response\": \"The maximum carry-on dimensions are 22x14x9 inches.\",\n    \"citations\": \"Section 4.1\",\n    \"createdAt\": \"2026-05-15T12:05:00\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Audit Log By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/audit/{{audit_id}}"
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": 1,\n  \"userId\": \"agent123\",\n  \"queryText\": \"What is the checked bag fee for international flights?\",\n  \"response\": \"The checked bag fee for international flights is $30 for the first bag.\",\n  \"citations\": \"Section 3.2\",\n  \"createdAt\": \"2026-05-15T12:00:00\"\n}"
+            },
+            {
+              "name": "Not Found (404)",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json"
+                }
+              ],
+              "body": "{\n  \"type\": \"urn:problem-type:not-found\",\n  \"title\": \"Not Found\",\n  \"status\": 404,\n  \"detail\": \"Audit entry not found with id: 999\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
